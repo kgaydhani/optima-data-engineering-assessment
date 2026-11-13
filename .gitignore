@@ -1,0 +1,16 @@
+# Python bytecode (compiled files Python makes automatically)
+__pycache__/
+*.py[cod]
+
+# Virtual environment (rebuilt from uv.lock) - Note: uv already placed a gitignore in the venv, so this is for visibility
+.venv/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# Editors and OS clutter
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
