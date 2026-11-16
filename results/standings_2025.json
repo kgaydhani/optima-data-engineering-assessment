@@ -1,0 +1,162 @@
+[
+    {
+        "position": 1,
+        "driverId": 1,
+        "driverName": "Kasper Renn",
+        "teamName": "Meridian Racing",
+        "points": 304,
+        "wins": 6
+    },
+    {
+        "position": 2,
+        "driverId": 3,
+        "driverName": "Luca Imai",
+        "teamName": "Voltaire GP",
+        "points": 287,
+        "wins": 4
+    },
+    {
+        "position": 3,
+        "driverId": 2,
+        "driverName": "Mateo Vidal",
+        "teamName": "Meridian Racing",
+        "points": 256,
+        "wins": 3
+    },
+    {
+        "position": 4,
+        "driverId": 4,
+        "driverName": "Elodie Marchand",
+        "teamName": "Voltaire GP",
+        "points": 216,
+        "wins": 4
+    },
+    {
+        "position": 5,
+        "driverId": 7,
+        "driverName": "Bruno Cavallaro",
+        "teamName": "Halcyon Racing",
+        "points": 123,
+        "wins": 0
+    },
+    {
+        "position": 6,
+        "driverId": 12,
+        "driverName": "Wei Tan",
+        "teamName": "Redline Dynamics",
+        "points": 116,
+        "wins": 3
+    },
+    {
+        "position": 7,
+        "driverId": 5,
+        "driverName": "Tobias Okereke",
+        "teamName": "Aurora Autosport",
+        "points": 115,
+        "wins": 0
+    },
+    {
+        "position": 8,
+        "driverId": 24,
+        "driverName": "Ilya Vasilev",
+        "teamName": "Aurora Autosport",
+        "points": 93,
+        "wins": 0
+    },
+    {
+        "position": 9,
+        "driverId": 20,
+        "driverName": "Lukas Steiner",
+        "teamName": "Ironwood Racing",
+        "points": 90,
+        "wins": 1
+    },
+    {
+        "position": 10,
+        "driverId": 13,
+        "driverName": "Nikolas Berg",
+        "teamName": "Sable Racing",
+        "points": 83,
+        "wins": 0
+    },
+    {
+        "position": 11,
+        "driverId": 15,
+        "driverName": "Emil Havel",
+        "teamName": "Polaris Racing",
+        "points": 68,
+        "wins": 0
+    },
+    {
+        "position": 12,
+        "driverId": 22,
+        "driverName": "Ren Nakagawa",
+        "teamName": "Tempest Motorsport",
+        "points": 66,
+        "wins": 0
+    },
+    {
+        "position": 13,
+        "driverId": 11,
+        "driverName": "Daniel Ashworth",
+        "teamName": "Redline Dynamics",
+        "points": 61,
+        "wins": 1
+    },
+    {
+        "position": 14,
+        "driverId": 8,
+        "driverName": "Rhys Duffy",
+        "teamName": "Halcyon Racing",
+        "points": 61,
+        "wins": 0
+    },
+    {
+        "position": 15,
+        "driverId": 9,
+        "driverName": "Ana Solano",
+        "teamName": "Concordia Motorsport",
+        "points": 61,
+        "wins": 0
+    },
+    {
+        "position": 16,
+        "driverId": 14,
+        "driverName": "Joao Ferreira",
+        "teamName": "Sable Racing",
+        "points": 60,
+        "wins": 0
+    },
+    {
+        "position": 17,
+        "driverId": 23,
+        "driverName": "Kwame Osei",
+        "teamName": "Concordia Motorsport",
+        "points": 48,
+        "wins": 0
+    },
+    {
+        "position": 18,
+        "driverId": 18,
+        "driverName": "Antoine Roux",
+        "teamName": "Tempest Motorsport",
+        "points": 46,
+        "wins": 0
+    },
+    {
+        "position": 19,
+        "driverId": 19,
+        "driverName": "Diego Morales",
+        "teamName": "Ironwood Racing",
+        "points": 39,
+        "wins": 0
+    },
+    {
+        "position": 20,
+        "driverId": 16,
+        "driverName": "Minjun Park",
+        "teamName": "Polaris Racing",
+        "points": 29,
+        "wins": 0
+    }
+]
