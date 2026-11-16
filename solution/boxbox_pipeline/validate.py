@@ -46,7 +46,8 @@ def check_points_match_position(results: pl.DataFrame) -> list[str]:
     mismatch = (
         results.join(scale, on="position", how="left")
         .with_columns(pl.col("expected").fill_null(0))
-        .filter(pl.col("points") != pl.col("expected"))
+        # ne_missing, not !=, otherwise row with missing points is not flagged
+        .filter(pl.col("points").ne_missing(pl.col("expected")))
     )
     if mismatch.height > 0:
         return [f"{mismatch.height} result rows have a point mismatch: {mismatch}"]
@@ -59,6 +60,26 @@ def check_one_winner_per_race(results: pl.DataFrame) -> list[str]:
     bad = winners.filter(pl.col("winners") != 1)
     if bad.height > 0:
         return [f"{bad.height} races do not have exactly one winner: {bad}"]
+    return []
+
+
+def check_finishing_positions(results: pl.DataFrame) -> list[str]:
+    """Among drivers who finish, the positions should be 1, 2, 3, ... N, with no repeats or gaps."""
+    per_race = (
+        results.filter(pl.col("position").is_not_null())
+        .group_by("raceId")
+        .agg(
+            pl.len().alias("finishers"),
+            pl.col("position").n_unique().alias("distinct_positions"),
+            pl.col("position").max().alias("highest_position"),
+        )
+    )
+    bad = per_race.filter(
+        (pl.col("distinct_positions") != pl.col("finishers"))
+        | (pl.col("highest_position") != pl.col("finishers"))
+    )
+    if bad.height > 0:
+        return [f"{bad.height} races have repeated or missing finishing positions: {bad}"]
     return []
 
 
@@ -75,6 +96,7 @@ def validate(
         + check_foreign_keys(races, results, drivers, teams)
         + check_points_match_position(results)
         + check_one_winner_per_race(results)
+        + check_finishing_positions(results)
     )
     if problems:
         raise DataQualityError("Source data failed validation:\n- " + "\n- ".join(problems))
