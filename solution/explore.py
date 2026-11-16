@@ -191,7 +191,7 @@ drivers = pl.read_csv(f"{DATA}/drivers.csv")
 # 5. How many distinct drivers set a qualifying time in each season?
 # (You'll need to join to races to get the season.) Write the answer down, it's a finding.
 
-races = pl.read_csv(f"{DATA}/races.csv")
+# races = pl.read_csv(f"{DATA}/races.csv")
 
 # x = (
 #     quali.join(races, on="raceId", how="left")
@@ -205,11 +205,106 @@ races = pl.read_csv(f"{DATA}/races.csv")
 
 # print(x)
 
-y = (
-    results.join(races, on="raceId", how="left")
-    .group_by("season", "teamId")
-    .agg(pl.col("driverId").n_unique(), pl.col("driverId").unique().alias("drivers"))
-    .sort("season", "teamId")
+# y = (
+#     results.join(races, on="raceId", how="left")
+#     .group_by("season", "teamId")
+#     .agg(pl.col("driverId").n_unique(), pl.col("driverId").unique().alias("drivers"))
+#     .sort("season", "teamId")
+# )
+
+# print(y)
+
+# races = pl.read_csv(f"{DATA}/races.csv")
+
+# x = races.with_columns(
+#     (pl.col("date") + " " + pl.col("time")).str.to_datetime("%Y-%m-%d %H:%M:%S").alias("raceStart")
+# )
+
+# print(x)
+
+# A. Patch the text directly: CASE WHEN time = 'null' THEN '00:00:00' ELSE time END
+# pl.when(pl.col("time") == "null").then(pl.lit("00:00:00")).otherwise(pl.col("time"))
+
+# B. Turn the word into a real null when reading, then fill it
+# races = (
+#     pl.read_csv(f"{DATA}/races.csv", null_values={"time": "null"})
+#     .with_columns(pl.col("time").fill_null("00:00:00"))
+#     .with_columns(
+#         (pl.col("date") + " " + pl.col("time"))
+#         .str.to_datetime("%Y-%m-%d %H:%M:%S")
+#         .alias("raceStart")
+#     )
+# )
+
+# print(races)
+
+
+# pl.Config.set_tbl_cols(-1)
+
+# print(
+#     results.filter(pl.col("raceId") == 202314)
+#     .sort("position")
+#     .select("resultId", "driverId", "position", "points", "gapToWinnerSeconds", "status")
+# )
+
+results = pl.read_csv(f"{DATA}/results.csv")
+races = pl.read_csv(f"{DATA}/races.csv")
+drivers = pl.read_csv(f"{DATA}/drivers.csv")
+teams = pl.read_csv(f"{DATA}/teams.csv")
+quali = pl.read_csv(f"{DATA}/qualifying.csv")
+
+# do points match up
+
+scale = pl.DataFrame(
+    {
+        "position": list(range(1, 11)),
+        "expected": [25, 18, 15, 12, 10, 8, 6, 4, 2, 1],
+    }
 )
 
-print(y)
+mismatch = (
+    results.join(scale, on="position", how="left")
+    .with_columns(pl.col("expected").fill_null(0))
+    .filter(pl.col("points") != pl.col("expected"))
+)
+
+print("points mismatches:", mismatch.height)
+
+totals = results.group_by("raceId").agg(pl.col("points").sum().alias("total"))
+print(totals.filter(pl.col("total") != 101).sort("raceId"))
+
+
+# fastest laps check
+
+print("blank laps:", results["fastestLapTime"].null_count())
+
+laps_per_race = results.group_by("raceId").agg(pl.col("fastestLapTime").count().alias("laps"))
+print("races with no lap:", laps_per_race.filter(pl.col("laps") == 0).height)
+
+bad_format = results.filter(
+    pl.col("fastestLapTime").is_not_null()
+    & ~pl.col("fastestLapTime").str.contains(r"^\d:\d{2}\.\d$")
+)
+print("bad lap format:", bad_format.height)
+
+# winners and status
+
+winners = results.filter(pl.col("position") == 1).group_by("raceId").agg(pl.len().alias("n"))
+print("races with more than one winner:", winners.filter(pl.col("n") != 1).height)
+print("races with no winner:", races.join(winners, on="raceId", how="anti").height)
+
+status_mismatch = results.filter(pl.col("position").is_null() != (pl.col("status") != "Finished"))
+print("status vs position mismatches:", status_mismatch.height)
+
+# foreign keys
+
+links = [
+    ("results → races", results, "raceId", races),
+    ("results → drivers", results, "driverId", drivers),
+    ("results → teams", results, "teamId", teams),
+    ("qualifying → races", quali, "raceId", races),
+    ("qualifying → drivers", quali, "driverId", drivers),
+]
+for name, child, key, parent in links:
+    orphans = child.join(parent, on=key, how="anti").height
+    print(f"{name}: {orphans} orphans")
