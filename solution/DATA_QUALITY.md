@@ -22,7 +22,7 @@ original ID with a `1` in front.
 | 202314 | 12 | 10272: P8, 4 pts | 110272: P7, 6 pts |
 | 202420 | 4 | 11383: P5, 10 pts | 111383: P4, 12 pts |
 
-**Why the originals are right:**
+**Why the original IDs are correct:**
 - The extra rows claim positions other drivers already hold.
 - Each driver's gap to the winner only fits the original position.
 - A race awards at most 101 points. With the extra rows, the two races total 117 and 113.
@@ -30,8 +30,11 @@ original ID with a `1` in front.
 
 **Impact if ignored:** those drivers get extra points and the 2023 standings order changes.
 
-**Decision:** drop the 3 rows by ID as it is certain these are erroneous.
-Any new duplicate stops the run with an error, since it is not possible to know which column may be problematic without investigation.
+**Decision:** drop the 3 rows by ID as it is certain these are erroneous. A listed row is only
+dropped while it is still a duplicate, so if the client reissued the file with different IDs, a
+good row couldn't be lost; the run also logs a warning if it doesn't drop exactly 3 rows.
+Any new duplicate stops the run with an error, since it is not possible to know which column may
+be problematic without investigation.
 
 ## 2. Race time is the text `"null"`
 
@@ -61,6 +64,32 @@ so a future team change would also be handled.
 - **Fastest laps:** 152 rows have no lap time, but every race has at least one. All lap times
   use the same `m:ss.s` format.
 
+- **Results:** every race has exactly 20 results once the duplicate rows are removed.
+
 ## Checks on every run
 
-<!-- TODO: fill in once validate.py exists. -->
+These are not one-off: the pipeline re-checks them every time it runs (`validate.py`). If any
+fails, it lists every problem found, exits with code 1, and writes no output files.
+
+| Check | Why |
+|---|---|
+| Columns the outputs use have no blanks | A blank name or date would reach the JSON as `null` |
+| Keys are unique: races, (season, round), (raceId, driverId), drivers, teams | A duplicate key double counts points or duplicates rows in a join |
+| Every race, driver and team in results exists | A missing link would silently drop a driver from the standings |
+| Points match the finishing position | Standings use the source points |
+| Every race with results has exactly one winner | Race stats need one winner |
+| Finishing positions in each race run 1, 2, 3 ... N | A repeat, gap or position 0 would break countback |
+| Lap times are in `m:ss.s` format | So they can be compared as durations |
+
+The pipeline also logs a warning for races in the calendar that have no results yet. These are
+left out of the stats, so a run part way through a season shows the races so far.
+
+Columns that are allowed to be blank: `time` (filled with `00:00:00`), `position` (drivers who
+didn't finish) and `fastestLapTime` (the output is null if no driver recorded one).
+
+## Not used by the outputs
+
+`qualifying.csv` and `videos.csv` aren't needed for the outputs, so the pipeline doesn't read
+them. Profiling found nothing that would matter if they were used later: every link in
+`qualifying.csv` resolves, and in `videos.csv` the 5 newest videos have no views, likes or
+comments yet, while blank race and driver links are expected (off-season and non-driver videos).
