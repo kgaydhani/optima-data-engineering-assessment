@@ -1,4 +1,5 @@
 import polars as pl
+import pytest
 
 from boxbox_pipeline.validate import (
     DataQualityError,
