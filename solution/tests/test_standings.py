@@ -56,11 +56,32 @@ def test_countback_breaks_a_tie_on_points_using_second_places():
 
 
 def test_team_is_taken_from_the_drivers_latest_round():
-    results = make_results([(1, 1, 10, 1, 25), (2, 1, 20, 1, 25)])
+    # Rows given latest round first, so the test can't pass just because of row order.
+    results = make_results([(2, 1, 20, 1, 25), (1, 1, 10, 1, 25)])
 
     standings = build_standings(make_races(2), results, DRIVERS, TEAMS)
 
     assert standings["teamName"].to_list() == ["Blue"]
+
+
+def test_drivers_tied_on_everything_are_ordered_by_driver_id():
+    # Each driver wins one race and is 2nd in the other: identical on every countback column.
+    # Driver 2 is listed first so the test can't pass just because of row order.
+    results = make_results(
+        [(1, 2, 20, 1, 25), (1, 1, 10, 2, 18), (2, 1, 10, 1, 25), (2, 2, 20, 2, 18)]
+    )
+
+    standings = build_standings(make_races(2), results, DRIVERS, TEAMS)
+
+    assert standings.select("driverId", "points", "position").rows() == [(1, 43, 1), (2, 43, 2)]
+
+
+def test_a_season_where_nobody_finished_still_has_a_wins_column():
+    results = make_results([(1, 1, 10, None, 0)])
+
+    standings = build_standings(make_races(1), results, DRIVERS, TEAMS)
+
+    assert standings.select("driverId", "points", "wins").rows() == [(1, 0, 0)]
 
 
 def test_positions_restart_for_each_season():

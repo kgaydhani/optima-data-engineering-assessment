@@ -17,6 +17,16 @@ def check_unique(df: pl.DataFrame, key: list[str], table: str) -> list[str]:
     return []
 
 
+def check_not_null(df: pl.DataFrame, columns: list[str], table: str) -> list[str]:
+    """The given columns should have a value in every row."""
+    problems = []
+    for column in columns:
+        blanks = df[column].null_count()
+        if blanks > 0:
+            problems.append(f"{table}.{column}: {blanks} blank values")
+    return problems
+
+
 def check_foreign_keys(
     races: pl.DataFrame, results: pl.DataFrame, drivers: pl.DataFrame, teams: pl.DataFrame
 ) -> list[str]:
@@ -72,14 +82,27 @@ def check_finishing_positions(results: pl.DataFrame) -> list[str]:
             pl.len().alias("finishers"),
             pl.col("position").n_unique().alias("distinct_positions"),
             pl.col("position").max().alias("highest_position"),
+            pl.col("position").min().alias("lowest_position"),
         )
     )
     bad = per_race.filter(
         (pl.col("distinct_positions") != pl.col("finishers"))
         | (pl.col("highest_position") != pl.col("finishers"))
+        | (pl.col("lowest_position") != 1)
     )
     if bad.height > 0:
         return [f"{bad.height} races have repeated or missing finishing positions: {bad}"]
+    return []
+
+
+def check_lap_times(results: pl.DataFrame) -> list[str]:
+    """Recorded fastest laps should be in m:ss.s format, so they can be compared as durations."""
+    bad = results.filter(
+        pl.col("fastestLapTime").is_not_null()
+        & ~pl.col("fastestLapTime").str.contains(r"^\d+:\d{2}\.\d$")
+    )
+    if bad.height > 0:
+        return [f"{bad.height} fastest lap times are not in m:ss.s format: {bad}"]
     return []
 
 
@@ -88,7 +111,11 @@ def validate(
 ) -> None:
     """Run every check and raise DataQualityError listing all problems found."""
     problems = (
-        check_unique(races, ["raceId"], "races")
+        check_not_null(races, ["raceId", "season", "round", "raceName", "date"], "races")
+        + check_not_null(results, ["raceId", "driverId", "teamId", "points"], "results")
+        + check_not_null(drivers, ["driverId", "forename", "surname"], "drivers")
+        + check_not_null(teams, ["teamId", "teamName"], "teams")
+        + check_unique(races, ["raceId"], "races")
         + check_unique(races, ["season", "round"], "races")
         + check_unique(results, ["raceId", "driverId"], "results")
         + check_unique(drivers, ["driverId"], "drivers")
@@ -97,6 +124,7 @@ def validate(
         + check_points_match_position(results)
         + check_one_winner_per_race(results)
         + check_finishing_positions(results)
+        + check_lap_times(results)
     )
     if problems:
         raise DataQualityError("Source data failed validation:\n- " + "\n- ".join(problems))

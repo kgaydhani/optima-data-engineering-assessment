@@ -7,7 +7,8 @@ def build_standings(
     races: pl.DataFrame, results: pl.DataFrame, drivers: pl.DataFrame, teams: pl.DataFrame
 ) -> pl.DataFrame:
     """Rank drivers per season by points, then countback on finishing positions."""
-    max_position = results["position"].max()
+    # At least 1, so an empty or all-retirement season still has a wins column.
+    max_position = results["position"].max() or 1
     position_counts = [
         (pl.col("position") == i).sum().alias(f"p{i}") for i in range(1, max_position + 1)
     ]
