@@ -65,7 +65,8 @@ def read_sources(data_dir: Path) -> SourceTables:
         races=pl.read_csv(
             data_dir / "races.csv",
             schema=RACES_SCHEMA,
-            null_values={"time": "null"},  # see DATA_QUALITY.md, finding 2
+            # The source writes missing times as the word "null" (DATA_QUALITY.md, finding 2).
+            null_values={"time": "null"},
         ),
         results=pl.read_csv(data_dir / "results.csv", schema=RESULTS_SCHEMA),
         drivers=pl.read_csv(data_dir / "drivers.csv", schema=DRIVERS_SCHEMA),
